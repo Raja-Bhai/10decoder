@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en-gb" data-ng-app="elasticDemo" id="ng-app">
+<head>
+<meta charset="utf-8">
+<title>Angular Elastic</title>
+<meta name="viewport" content="width=device-width">
+</head>
+<body data-ng-controller="elasticDemoController">
+
+	<h1>Start Talking</h1>
+
+	<form data-ng-submit="submit()">
+		
+		<span id="interim_span"
+				class="final"></span>
+		<div id="results">
+			<span id="final_span" class="final" style="display: none;"></span> 
+
+
+			<textarea class="msd-elastic ng-pristine ng-valid"
+				data-ng-model="foo" id="first"
+				style="overflow: hidden; word-wrap: break-word; resize: horizontal; height: 135px; width: 792px;"></textarea>
+		</div>
+	</form>
+
+	<script
+		src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
+	<script src="http://monospaced.github.io/angular-elastic/elastic.js"></script>
+	<script>
+	
+	
+	
+		     angular.module('elasticDemo', [ 'monospaced.elastic' ])
+				.controller(
+						'elasticDemoController',
+						[
+								'$scope',
+								function($scope) {
+									'use strict';
+
+									$scope.foo = '';
+
+									var ignore_onend;
+									var final_transcript = '';
+									var recognition = new webkitSpeechRecognition();
+									recognition.continuous = true;
+									recognition.interimResults = true;
+									var recognizing;
+									recognition.onstart = function() {
+										recognizing = true;
+										console.log('info_speak_now');
+										//start_img.src = 'view6/mic-animate.gif';
+									};
+
+									   recognition.onerror = function(event) {
+										if (event.error == 'no-speech') {
+											//start_img.src = 'view6/mic.gif';
+											console.log('info_no_speech');
+											ignore_onend = true;
+										}
+										if (event.error == 'audio-capture') {
+											//start_img.src = 'view6/mic.gif';
+											console.log('info_no_microphone');
+											ignore_onend = true;
+										}
+										if (event.error == 'not-allowed') {
+											if (event.timeStamp
+													- start_timestamp < 100) {
+												console.log('info_blocked');
+											} else {
+												console.log('info_denied');
+											}
+											ignore_onend = true;
+										}
+									};
+
+									recognition.onend = function() {
+										recognizing = false;
+										if (ignore_onend) {
+											return;
+										}
+										//start_img.src = 'view6/mic.gif';
+										if (!final_transcript) {
+											console.log('info_start');
+											return;
+										}
+										console.log('');
+										/*if (window.getSelection) {
+										  window.getSelection().removeAllRanges();
+										  var range = document.createRange();
+										  range.selectNode(document.getElementById('final_span'));
+										  window.getSelection().addRange(range);
+										}
+										if (create_email) {
+										  create_email = false;
+										  createEmail();
+										}*/
+									};
+									
+									recognition.onresult = function(event) {
+										var interim_transcript = '';
+										for (var i = event.resultIndex; i < event.results.length; ++i) {
+											if (event.results[i].isFinal) {
+												final_transcript += event.results[i][0].transcript;
+											} else {
+												interim_transcript += event.results[i][0].transcript;
+											}
+										}
+										var final_span = document
+												.getElementById('final_span');
+										var interim_span = document
+												.getElementById('interim_span');
+										final_transcript = capitalize(final_transcript);
+										final_span.innerHTML = linebreak(final_transcript);
+										interim_span.innerHTML = linebreak(interim_transcript);
+
+										/* if (final_transcript || interim_transcript) {
+										  showButtons('inline-block');
+										} */
+										console.log("before :"+$scope.foo);
+										$scope.foo = final_span.innerHTML;
+										console.log("after :"+$scope.foo);
+										$scope.$apply();
+									};
+									//update()
+									
+
+									var two_line = /\n\n/g;
+									var one_line = /\n/g;
+									function linebreak(s) {
+										return s.replace(two_line, '<p></p>')
+												.replace(one_line, '<br>');
+									}
+
+									var first_char = /\S/;
+									function capitalize(s) {
+										return s.replace(first_char,
+												function(m) {
+													return m.toUpperCase();
+												});
+									}
+
+									recognition.lang = "en-US";
+									recognition.start();
+
+									$scope.submit = function() {
+										$scope.bar = '';
+									};
+								} ]);
+	</script>
+</body>
+</html>
